@@ -1,0 +1,5 @@
+G:/sync/c_workspace/test/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+G:/sync/c_workspace/test/cmake-build-debug/CMakeFiles/b.dir
+G:/sync/c_workspace/test/cmake-build-debug/CMakeFiles/test.dir
+G:/sync/c_workspace/test/cmake-build-debug/CMakeFiles/a.dir
+G:/sync/c_workspace/test/cmake-build-debug/CMakeFiles/edit_cache.dir
