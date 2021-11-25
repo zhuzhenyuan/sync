@@ -16,6 +16,6 @@ print(b)
 for k, v in ipairs(b) do
     print(k, v)
 end
-for i in 1,#b do
-    print(i)
-end
+-- for i in 1,#b do
+--     print(i)
+-- end
