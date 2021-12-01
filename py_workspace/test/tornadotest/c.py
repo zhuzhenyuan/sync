@@ -15,4 +15,6 @@ async def aa():
 	d = await client.read_bytes(50, True)
 	print(d)
 
-IOLoop.instance().run_sync(aa)
+# IOLoop.instance().run_sync(aa)
+
+
