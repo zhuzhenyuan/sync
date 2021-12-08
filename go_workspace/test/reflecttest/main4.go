@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 )
+type str string
 
 func main() {
 
@@ -24,5 +25,9 @@ func main() {
 	fmt.Println(y)
 	y2 := v3.Interface().(MyInt) // y will have type float64.
 	fmt.Println(y2)
+
+	s1 := "234"
+	var s2 str = "sadf"
+	fmt.Println(reflect.TypeOf(s1) == reflect.TypeOf(s2))
 
 }

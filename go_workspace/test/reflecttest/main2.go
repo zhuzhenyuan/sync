@@ -10,7 +10,8 @@ func main() {
 	type cat struct {
 		Name string
 		// 带有结构体tag的字段
-		Type int `json:"type" id:"100"`
+		Type int `json:"type" id:"100" empty`
+		//Type int `empty`
 	}
 	// 创建cat的实例
 	ins := cat{Name: "mimi", Type: 1}
@@ -29,6 +30,8 @@ func main() {
 		// 从tag中取出需要的tag
 		fmt.Println(catType.Tag.Get("json"), catType.Tag.Get("id"))
 		fmt.Println(catType.Tag.Get("json"), catType.Tag.Get("id2"))
+		fmt.Println(catType.Tag.Get("json"), catType.Tag.Get("empty"))
+		fmt.Println(catType.Tag.Lookup("empty"))
 	}
 	// 多层成员访问
 	//typeOfCat.FieldByIndex()

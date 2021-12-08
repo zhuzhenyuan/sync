@@ -1,0 +1,3 @@
+F:\software_install\apps\CLion\ch-0\212.5457.51\bin\cmake\win\bin\cmake.exe -E rm -f CMakeFiles\see.dir/objects.a
+F:\software_install\TDM-GCC-64\bin\ar.exe cr CMakeFiles\see.dir/objects.a @CMakeFiles\see.dir\objects1.rsp
+F:\software_install\TDM-GCC-64\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\see.dir/objects.a -Wl,--no-whole-archive -o see.exe -Wl,--out-implib,libsee.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\see.dir\linklibs.rsp

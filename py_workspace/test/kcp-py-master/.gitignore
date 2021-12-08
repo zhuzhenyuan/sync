@@ -1,0 +1,21 @@
+syntax: glob
+*.al
+*.bak
+*.egg-info
+*.la
+*.lo
+*.o
+*.orig
+*.pyc
+*.pyd
+*.rej
+*.so
+*.swp
+.cache/
+.idea/
+.tox/
+venv
+build/
+dist/
+.vscode
+*.log
