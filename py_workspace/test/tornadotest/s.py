@@ -26,4 +26,5 @@ class EchoServer(TCPServer):
 
 server = EchoServer()
 server.listen(8888)
+server.start(2)
 IOLoop.current().start()

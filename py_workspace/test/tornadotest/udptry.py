@@ -30,7 +30,8 @@ class UDPServer(object):
             self.add_sockets(sockets)
         else:
             self._pending_sockets.extend(sockets)
-        self.start()  # todo 后面再考虑怎么处理，如何启动
+        print(2)
+        # self.start(2)  # todo 后面再考虑怎么处理，如何启动
 
     def add_sockets(self, sockets):
         if self.io_loop is None:
@@ -49,6 +50,7 @@ class UDPServer(object):
         self._started = True
         if num_processes != 1:
             process.fork_processes(num_processes, max_restarts)
+        print(333333)
         sockets = self._pending_sockets
         self._pending_sockets = []
         self.add_sockets(sockets)
@@ -142,5 +144,7 @@ def add_accept_handler(sock: socket.socket, callback: Callable[[socket.socket, b
 
 
 server = UDPServer()
-server.bind(8888)
+# server.bind(8888)
+server.bind(8887)
+server.start(2)
 IOLoop.current().start()
