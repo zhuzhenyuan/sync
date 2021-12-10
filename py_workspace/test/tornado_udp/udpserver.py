@@ -13,12 +13,12 @@ _DEFAULT_BACKLOG = 128
 
 
 class UDPServer(object):
-    def __init__(self, receive_size=_UDP_MSG_SIZE_MAX, process_num=_DEFAULT_PROCESS_NUM):
+    def __init__(self, msg_size=_UDP_MSG_SIZE_MAX, process_num=_DEFAULT_PROCESS_NUM):
         self._sockets = {}
         self._pending_sockets = []
         self._started = False
         self._stopped = False
-        self._receive_size = receive_size
+        self._msg_size = msg_size
         self._process_num = process_num
 
     def bind(
@@ -61,11 +61,11 @@ class UDPServer(object):
             IOLoop.current().remove_handler(fd)
             sock.close()
 
-    def handle_message(self, sock: [socket.socket, UDPMessage], data: bytes, address: Any) -> Optional[Awaitable[None]]:
+    def handle_message(self, sock: UDPMessage, data: bytes, address: Any) -> Optional[Awaitable[None]]:
         # sock.sendto(b'Hello, %s!' % data, address)
         raise NotImplementedError()
 
-    def _handle_connection(self, sock: socket.socket, data: bytes, address: Any) -> None:
+    def _handle_connection(self, sock: UDPMessage, data: bytes, address: Any) -> None:
         try:
             future = self.handle_message(sock, data, address)
             if future is not None:
@@ -75,14 +75,14 @@ class UDPServer(object):
         except Exception:
             app_log.error("Error in connection callback", exc_info=True)
 
-    def add_accept_handler(self, sock: [socket.socket, UDPMessage],
-                           callback: Callable[[socket.socket, bytes, Any], None]) -> None:
+    def add_accept_handler(self, sock: UDPMessage,
+                           callback: Callable[[UDPMessage, bytes, Any], None]) -> None:
         def handle_events(fd: Union[int, ioloop._Selectable], events: int) -> None:
             if events & ioloop.IOLoop.READ:
                 # 可以死循环，但是考虑有大量数据包时，其他协程处理会很晚（极限情况可能根本执行不到）,故设置receive最大上限
                 for _ in range(self._process_num):
                     try:
-                        data, address = sock.recvfrom(self._receive_size)
+                        data, address = sock.recvfrom(self._msg_size)
                     except socket.error as e:
                         if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
                             break

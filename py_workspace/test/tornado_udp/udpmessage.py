@@ -1,6 +1,6 @@
 import errno
 import socket
-from typing import Awaitable
+from typing import Awaitable, Union
 from collections import deque
 
 from tornado import ioloop
@@ -17,16 +17,16 @@ _UDP_MSG_SIZE_INTERNET = 576 - 20 - 8  # 因特网建议最大
 
 class UDPMessage(object):
     def __init__(self, sock, process_num=_DEFAULT_PROCESS_NUM):
-        self.io_loop = IOLoop.current()
+        self._io_loop = IOLoop.current()
         self._process_num = process_num
-        self.sock = sock
-        self.sock.setblocking(False)
+        self._sock = sock
+        self._sock.setblocking(False)
         self._read_buffer = deque()
         self._write_buffer = deque()
         self._state = ioloop.IOLoop.ERROR | ioloop.IOLoop.READ
 
     def __getattr__(self, item):
-        return getattr(self.sock, item)
+        return getattr(self._sock, item)
 
     def recv(self, size) -> Awaitable[bytes]:
         future = Future()
@@ -40,7 +40,7 @@ class UDPMessage(object):
         for _ in range(num):
             size, future = self._read_buffer.popleft()
             try:
-                data = self.sock.recv(size)
+                data = self._sock.recv(size)
             except socket.error as e:
                 self._read_buffer.appendleft((size, future))
                 if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
@@ -55,7 +55,7 @@ class UDPMessage(object):
         # future.add_done_callback(lambda f: f.exception())
         self._write_buffer.append((data, address, future))
         if not self._state & ioloop.IOLoop.WRITE:
-            self.io_loop.update_handler(self.sock.fileno(), self._state | ioloop.IOLoop.WRITE)
+            self._io_loop.update_handler(self._sock.fileno(), self._state | ioloop.IOLoop.WRITE)
         return future
 
     def handle_write(self):
@@ -63,9 +63,20 @@ class UDPMessage(object):
         socks = []
         for _ in range(num):
             data, address, future = self._write_buffer.popleft()
-            self.sock.sendto(data, address)
+            self._sock.sendto(data, address)
             socks.append(future)
         for future in socks:
             future_set_result_unless_cancelled(future, None)
         if len(self._write_buffer) <= 0:
-            self.io_loop.update_handler(self.sock.fileno(), self._state)
+            self._io_loop.update_handler(self._sock.fileno(), self._state)
+
+    def init(self):
+        self._io_loop.add_handler(self._sock.fileno(), self._handle_events, ioloop.IOLoop.ERROR | ioloop.IOLoop.READ)
+
+    def _handle_events(self, fd: Union[int, ioloop._Selectable], events: int) -> None:
+        if events & self._io_loop.READ:
+            self.handle_read()
+        if events & self._io_loop.WRITE:
+            self.handle_write()
+        if events & self._io_loop.ERROR:
+            print("events error")
