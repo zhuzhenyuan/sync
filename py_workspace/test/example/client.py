@@ -3,28 +3,8 @@ import os
 import random
 import json
 import time
-
-db = {}  # 全局数据，保存游戏数据
-db_path = './data.db'  # 数据库文件
-
-
-# 数据读取初始化
-def db_read():
-    global db
-    if os.path.exists(db_path):
-        with open(db_path, 'r') as f:
-            db = json.loads(f.read())
-
-# 保存数据到文件
-def db_write():
-    global db
-    tmp = {}
-    if os.path.exists(db_path):
-        with open(db_path, 'r') as f:
-            tmp = json.loads(f.read())
-    with open(db_path, 'w') as f:
-        tmp.update(db)
-        f.write(json.dumps(tmp))
+from xml.sax.handler import DTDHandler
+import requests
 
 
 def get_input_option():
@@ -94,102 +74,45 @@ class Pages(object):
 
 # 数据处理类
 class DataHandle(object):
-    @classmethod
-    def init(cls):
-        db_read()
 
     @classmethod
     def exit_game(cls):
-        if db:
-            db_write()
+        requests.get("http://127.0.0.1:9999/game/exit")
         exit(0)
 
     @classmethod
     def handler_game_login(cls, choose, username, passwd):
-        if choose == 2:  # 注册
-            if username in db:
-                return False
-            db[username] = {
-                'passwd': passwd
-            }
-            db_write()
-        elif choose == 1:  # 登录
-            if username not in db or passwd != db[username]['passwd']:
-                return False
-        else:
-            return False
-        return True
+        ret = requests.get("http://127.0.0.1:9999/game/login", {'args': (choose, username, passwd)})
+        print(ret.json()['args'])
+        return ret.json()['args']
 
     @classmethod
     def game_random_num(cls, username, difficulty):
-        db[username]['difficulty'] = difficulty  # 保存难度
-        # 随机数字
-        if difficulty == 1:
-            db[username]['num'] = random.randint(1, 100)
-        elif difficulty == 2:
-            db[username]['num'] = random.randint(1, 1000)
-        elif difficulty == 3:
-            db[username]['num'] = random.randint(1, 10000)
-        db[username]['start_time'] = time.time()  # 记录开始时间
-        return db[username]['num']
+        ret = requests.get("http://127.0.0.1:9999/game/random", {'args': (username, difficulty)})
+        return ret.json()['args']
     
     @classmethod
     def game_check_num(cls, username, num):
-        user_data = db[username]
-        if user_data['num'] == num:
-            difficulty = user_data['difficulty']
-
-            user_data['end_time'] = time.time()  # 记录结束时间
-            time_cost = user_data['end_time'] - user_data['start_time']  # 计算当前游戏完成时间
-            user_data.setdefault('play_time', []).append(time_cost)  # 放入历史
-            user_data['points'] = user_data.get('points', 0) + 10 * difficulty  # 计算保存积分
-            user_data['frequency'] = user_data.get('frequency', 0) + 1  # 记录玩的次数+1
-
-            # 记录每个难度最短的完成时间
-            if 'time_cost' not in user_data or difficulty not in user_data['time_cost']:
-                user_data.setdefault('time_cost', {})[difficulty] = time_cost
-            else:
-                user_data['time_cost'][difficulty] = min(user_data['time_cost'][difficulty], time_cost)
-            return 0
-        elif user_data['num'] > num:
-            return -1
-        else:
-            return 1
+        ret = requests.get("http://127.0.0.1:9999/game/check", {'args': (username, num)})
+        return ret.json()['args']
 
     @classmethod
     def game_get_info(cls, username):
-        t = db[username]['end_time'] - db[username]['start_time']  # 获取当前局完成时间
-        t_average = sum(db[username]['play_time']) / len(db[username]['play_time'])  # 获取所有的平均游玩时间
-        return t, t_average, db[username]['points']
+        ret = requests.get("http://127.0.0.1:9999/game/info", {'args': (username)})
+        return ret.json()['args']
 
     @classmethod
     def game_get_points_leaderboard(cls):
-        l = []
-        for k, v in db.items():
-            if 'points' not in v:
-                continue
-            l.append((k, v['points']))
-        
-        l = sorted(l, key=lambda d: d[1], reverse=True)
-        return l[:10]  # 获取积分排行
+        ret = requests.get("http://127.0.0.1:9999/game/leaderboard/points")
+        return ret.json()['args']
     
     @classmethod
     def game_get_frequency_leaderboard(cls):
-        l = []
-        for k, v in db.items():
-            if 'frequency' not in v:
-                continue
-            l.append((k, v['frequency']))
-        
-        l = sorted(l, key=lambda d: d[1], reverse=True)
-        return l[:10]  # 获取玩的次数排行
+        ret = requests.get("http://127.0.0.1:9999/game/leaderboard/frequency")
+        return ret.json()['args']
 
 
 class Game(object):
-    @classmethod
-    def init(cls):
-        db_read()
-
     @classmethod
     def game_login(cls):
         op_pages = {
@@ -269,7 +192,6 @@ class Game(object):
 
 
 def run():
-    DataHandle.init()
     username = Game.game_login()
     if username:
         print("login success")
@@ -278,3 +200,5 @@ def run():
 
 if __name__ == "__main__":
     run()
+    # ret = requests.get("http://127.0.0.1:9999/game/login", {'args': (1, 'zzy', '1234')})
+    # print(ret.json()['args'])
